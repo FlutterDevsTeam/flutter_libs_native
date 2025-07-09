@@ -1,0 +1,6 @@
+repositories {
+    flatDir { dirs 'libs' }  // Load .aar from /libs
+}
+dependencies {
+    implementation(name: 'flutter_libs_native-release', ext: 'aar')
+}

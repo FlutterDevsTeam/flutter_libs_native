@@ -1,0 +1,7 @@
+name: flutter_libs_native
+version: 1.0.0
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.d3122499.flutter_libs_native
