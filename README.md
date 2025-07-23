@@ -29,15 +29,6 @@ This library provides core mobile services for educational devices including:
 - **Permission Handling**
 - **Background Task Management**
 
-## For Course Participants Only
-
-This documentation is provided exclusively for students and faculty participating in:
-
-**Course:** [Course Name]  
-**Institution:** [Your University Name]  
-**Academic Year:** [Year]  
-**Professor:** [Professor's Name]  
-
 ## Usage Restrictions
 
 By accessing this repository, you acknowledge that:
