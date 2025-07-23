@@ -2,9 +2,6 @@
 
 /// Core interface library for Flutter Native Integration Suite
 /// 
-/// This file defines the public API contracts for the FlutterLibsNative package.
-/// Actual implementations are encapsulated in platform-specific code.
-/// 
 /// {@category Core}
 /// {@license Education-Use-Only}
 library flutter_libs_native_interface;
@@ -15,52 +12,36 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_libs_native/flutter_libs_native.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_local_notifications/src/platform_specifics/android/notification_channel.dart';
 import 'package:geolocator/geolocator.dart';
 
-/// Supported languages for localization
-/// 
-/// Used primarily for permission dialogs and system-level communications
-enum Language { 
-  english, 
-  spanish 
-}
+enum Language { english, spanish, french, german }
 
 /// {@template background_handler_interface}
 /// Contract for background event handlers
-/// 
-/// Defines interface for background notification taps and Firebase messages.
-/// Implementations are platform-specific and invoked through native channels.
 /// {@endtemplate}
 class IBackgroundHandlerInterface {
-  /// {@macro background_handler_interface}
   @pragma('vm:entry-point')
   static void Function(NotificationResponse) get onNotificationTap =>
       notificationBackgroundTap;
 
-  /// {@macro background_handler_interface}
   @pragma('vm:entry-point')
   static Future<void> Function(RemoteMessage) get onBackgroundMessage =>
       firebaseMessagingBackgroundHandler;
+
+  /// NEW: Background task completion callback
+  @pragma('vm:entry-point')
+  static Future<void> Function(String) get onBackgroundTaskComplete => 
+      (String taskId) async {};
 }
 
 /// {@template session_manager}
 /// Secure session management contract
-/// 
-/// Provides methods for session persistence, validation and cleanup.
-/// Actual storage mechanism is platform-specific.
 /// {@endtemplate}
 class ISessionManager {
-  /// Default interval for session validation checks
   static Duration validationInterval = Duration(days: 10);
 
-  /// Persists user session with optional duration parameters
-  /// 
-  /// @param userData - Serialized user session data
-  /// @param sDuration - Standard session duration
-  /// @param customDuration - Custom duration override
   static Future<void> saveSession(
     String userData,
     Duration? sDuration,
@@ -69,45 +50,49 @@ class ISessionManager {
     await SessionManager.saveSession(userData, sDuration, customDuration);
   }
 
-  /// Retrieves current session data if valid
-  /// 
-  /// @returns Serialized session data or null if expired/invalid
   static Future<String?> getSession() async {
     return await SessionManager.getSession();
   }
 
-  /// Clears all session data immediately
   static Future<void> clearSession() async {
     await SessionManager.clearSession();
   }
 
-  /// Initializes periodic session validation checks
   static Future<void> initializePeriodicValidation() async {
     await SessionManager.initializePeriodicValidation();
   }
 
-  /// Validates current session against security policies
   static Future<void> checkAndValidateSession() async {}
+
+  /// NEW: Session extensions
+  static Future<bool> isSessionActive() async => false;
+  static Future<DateTime?> getSessionExpiry() async => null;
 }
 
-// Implementation details are handled in native platform code
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 @pragma('vm:entry-point')
 void notificationBackgroundTap(NotificationResponse response) {}
 
+class SessionManager {
+  static Future<void> saveSession(
+    String userData,
+    Duration? sDuration,
+    Duration? customDuration,
+  ) async {}
+
+  static Future<String?> getSession() async => null;
+
+  static Future<void> clearSession() async {}
+
+  static Future<void> initializePeriodicValidation() async {}
+}
+
 /// {@template permission_manager}
 /// System permission management contract
-/// 
-/// Handles platform-specific permission requests and status checks.
 /// {@endtemplate}
 class IPermissionManager {
-  /// Requests all required runtime permissions
-  /// 
-  /// @param context - BuildContext for dialogs
-  /// @param appName - Application name for permission dialogs
-  /// @param language - Preferred language for system dialogs
   static Future<void> requestAllPermissions(
     BuildContext context,
     String appName,
@@ -115,28 +100,33 @@ class IPermissionManager {
   ) async {
     await PermissionManager().requestAllPermissions(context, appName, language);
   }
+
+  /// NEW: Permission features
+  static Future<bool> hasLocationPermission() async => false;
+  static Future<bool> hasNotificationPermission() async => false;
+  static Future<void> openAppSettings() async {}
+}
+
+class PermissionManager {
+  Future<void> requestAllPermissions(
+    BuildContext context,
+    String appName,
+    Language language,
+  ) async {}
 }
 
 /// {@template geofence_manager}
 /// Geofencing service contract
-/// 
-/// Provides location-based geofencing capabilities with persistence.
 /// {@endtemplate}
 class IGeofenceManager {
-  /// Retrieves last known geofence location from persistent storage
   static Future<GeofenceLocation?> getSavedGeofenceLocation() async {
     return await GeofenceManager().getSavedGeofenceLocation();
   }
 
-  /// Clears all geofence location data
   static Future<void> clearGeofenceLocation() async {
     await GeofenceManager().clearGeofenceLocation();
   }
 
-  /// Saves geofence location with optional local caching
-  /// 
-  /// @param location - Geofence coordinates and radius
-  /// @param setLocal - If true, caches location in memory
   static Future<void> saveGeofenceLocation({
     required GeofenceLocation location,
     bool setLocal = false,
@@ -146,20 +136,98 @@ class IGeofenceManager {
       setLocal: setLocal,
     );
   }
+
+  /// NEW: Geofence extensions
+  static Future<bool> isGeofenceActive() async => false;
+  static Future<void> startGeofenceMonitoring() async {}
+}
+
+class GeofenceManager {
+  Future<void> saveGeofenceLocation({
+    required GeofenceLocation location,
+    bool setLocal = false,
+  }) async {}
+
+  Future<void> clearGeofenceLocation() async {}
+
+  Future<GeofenceLocation?> getSavedGeofenceLocation() async => null;
+}
+
+/// {@template location_service}
+/// Location service contract
+/// {@endtemplate}
+class ILocationService {
+  static Future<Position?> getCurrentLocation() async {
+    return await LocationService().getCurrentLocation();
+  }
+
+  static Future<bool> requestLocationPermission() async {
+    return await LocationService().requestLocationPermission();
+  }
+
+  /// NEW: Location features
+  static Future<LocationAccuracyStatus> getAccuracyStatus() async => 
+      LocationAccuracyStatus.reduced;
+  static Future<void> enableHighAccuracy(bool enable) async {}
+}
+
+enum LocationAccuracyStatus { precise, reduced, disabled }
+
+class LocationService {
+  Future<Position?> getCurrentLocation() async => null;
+
+  Future<bool> requestLocationPermission() async => false;
+}
+
+/// Notification channels configuration
+class INotificationChannels {
+  final NotificationChannels _notificationChannels = NotificationChannels();
+  static final AndroidNotificationChannel emergencyChannel =
+      NotificationChannels.emergencyChannel;
+  static final AndroidNotificationChannel generalChannel =
+      NotificationChannels.generalChannel;
+
+  /// NEW: Channel features
+  static Future<void> createCustomChannel(String channelId, String name) async {}
+}
+
+/// Notification configuration
+class INotificationConfig {
+  final NotificationConfig _notificationConfig = NotificationConfig();
+
+  static const String androidGeneralChannelId =
+      NotificationConfig.androidGeneralChannelId;
+
+  static const int foregroundNotificationId =
+      NotificationConfig.foregroundNotificationId;
+
+  /// NEW: Config features
+  static const int backgroundNotificationId = 10014;
 }
 
 /// {@template notification_service}
-/// Unified notification management contract
-/// 
-/// Handles both local and push notifications with platform-specific channels.
+/// Notification service contract
 /// {@endtemplate}
 class INotificationService {
   static late NotificationService _instance;
 
-  /// Initializes notification service with platform-specific configurations
-  /// 
-  /// @param androidIcon - Resource ID for notification icons (Android)
-  /// @param requestIOSPermissions - Auto-request notification permissions (iOS)
+  static NotificationService init({
+    FirebaseMessaging? fcm,
+    FirebaseFirestore? firestore,
+    FlutterLocalNotificationsPlugin? notificationsPlugin,
+    FlutterBackgroundService? backgroundService,
+  }) {
+    _instance = NotificationService(
+      fcm: fcm,
+      firestore: firestore,
+      notificationsPlugin: notificationsPlugin,
+      backgroundService: backgroundService,
+    );
+    return _instance;
+  }
+
+  static NotificationService get instance => _instance;
+
   Future<void> initialize({
     required String androidIcon,
     bool requestIOSPermissions = true,
@@ -170,9 +238,6 @@ class INotificationService {
     );
   }
 
-  /// Sends emergency notification to all connected devices
-  /// 
-  /// @param alertNotificationMessage - The alert content to broadcast
   static Future<bool?> sendNotificationToConnectedDevices(
     String alertNotificationMessage,
   ) async {
@@ -180,70 +245,144 @@ class INotificationService {
       alertNotificationMessage,
     );
   }
+
+  /// NEW: Notification features
+  static Future<void> cancelAllNotifications() async {}
+  static Future<int> getPendingNotificationCount() async => 0;
 }
 
-// ========================================================================
-// Implementation Classes (Stubs - Actual implementations are platform-native)
-// ========================================================================
+class INotificationServices {
+  static late NotificationServices _instance;
 
-/// {@nodoc}
-/// Platform-specific implementations handle these method calls
-class SessionManager {
-  static Future<void> saveSession(
-    String userData,
-    Duration? sDuration,
-    Duration? customDuration,
-  ) async {}
+  static NotificationServices init({
+    required FlutterBackgroundService backgroundService,
+  }) {
+    _instance =
+        NotificationService(backgroundService: backgroundService)
+            as NotificationServices;
+    return _instance;
+  }
 
-  static Future<String?> getSession() async {}
+  static INotificationService get instance => _instance;
 
-  static Future<void> clearSession() async {}
-
-  static Future<void> initializePeriodicValidation() async {}
+  Future<void> initialize({
+    required String androidIcon,
+    bool requestIOSPermissions = true,
+  }) async {
+    await _instance.initialize(
+      androidIcon: androidIcon,
+      requestIOSPermissions: requestIOSPermissions,
+    );
+  }
 }
 
-/// {@nodoc}
-class PermissionManager {
-  Future<void> requestAllPermissions(
-    BuildContext context,
-    String appName,
-    Language language,
-  ) async {}
+class IGeofenceLocation {
+  final double latitude;
+  final double longitude;
+  final double radiusKm;
+
+  IGeofenceLocation({
+    required this.latitude,
+    required this.longitude,
+    this.radiusKm = 1.0,
+  });
 }
 
-/// {@nodoc}
-class GeofenceManager {
-  Future<void> saveGeofenceLocation({
-    required GeofenceLocation location,
-    bool setLocal = false,
-  }) async {}
+/// Main library entry point
+class FlutterLibsNative {
+  static const MethodChannel _channel = MethodChannel('flutter_libs_native');
 
-  Future<void> clearGeofenceLocation() async {}
+  static Future<void> fiInitialize() async {
+    return FirebaseInitializer.initialize();
+  }
 
-  Future<GeofenceLocation?> getSavedGeofenceLocation() async {}
+  static final FlutterLibsNativePlatform _platform =
+      FlutterLibsNativePlatform.instance;
+
+  static final ErrorLoggerService errorLogger = ErrorLoggerService();
+
+  static Future<String?> getPlatformVersion() async {
+    return _platform.getPlatformVersion();
+  }
+
+  static Future<void> initialize() async {
+    await _channel.invokeMethod('initialize');
+
+    await _platform.initializeErrorLogger();
+    await _platform.initializeLocationService();
+    await _platform.configureNotifications();
+    await _platform.startSessionManager();
+  }
+
+  static Future<Map<String, String>?>
+  initializeFirebaseWithRemoteConfig() async {
+    return _platform.initializeFirebaseWithRemoteConfig();
+  }
+
+  static Future<void> initializeGeofencingService() async {
+    await _platform.initializeGeofencingService();
+  }
+
+  static Future<void> configureNotifications() async {
+    await _platform.configureNotifications();
+  }
+
+  /// NEW: Utility methods
+  static Future<bool> isDarkMode() async => false;
+  static Future<double> getBatteryLevel() async => 100.0;
+  static Future<void> optimizePerformance() async {}
 }
 
-/// {@nodoc}
-class LocationService {
-  Future<Position?> getCurrentLocation() async => null;
-  Future<bool> requestLocationPermission() async => false;
+class ErrorLoggerService {
+  /// NEW: Error logging features
+  static Future<void> logError(dynamic error, StackTrace stack) async {}
+  static Future<List<String>> getErrorLogs() async => [];
 }
 
-/// {@nodoc}
+class IErrorLogger {
+  /// NEW: Error interface
+  static Future<void> captureException(dynamic exception) async {}
+  static Future<void> setUserContext(String userId) async {}
+}
+
+class FirebaseInitializer {
+  static Future<void> initialize() async {}
+
+  /// NEW: Firebase features
+  static Future<bool> isFirebaseConnected() async => true;
+}
+
+class GeofenceLocation {
+  final double latitude;
+  final double longitude;
+  final double radiusKm;
+  
+  GeofenceLocation({
+    required this.latitude,
+    required this.longitude,
+    this.radiusKm = 1.0,
+  });
+
+  /// NEW: Location methods
+  double distanceTo(GeofenceLocation other) => 0.0;
+}
+
 class NotificationChannels {
   static late AndroidNotificationChannel emergencyChannel;
   static late AndroidNotificationChannel generalChannel;
   NotificationChannels();
+
+  /// NEW: Channel methods
+  static Future<void> deleteChannel(String channelId) async {}
 }
 
-/// {@nodoc}
 class NotificationConfig {
   static const androidGeneralChannelId = 'general_channel';
   const NotificationConfig();
+
   static const foregroundNotificationId = 10013;
 }
 
-/// {@nodoc}
 class NotificationService {
   NotificationService({
     FirebaseMessaging? fcm,
@@ -259,26 +398,38 @@ class NotificationService {
 
   Future<bool?> sendNotificationToConnectedDevices(
     String alertNotificationMessage,
-  }) async {}
+  ) async => null;
+
+  /// NEW: Notification methods
+  Future<void> scheduleNotification(DateTime when, String message) async {}
 }
 
-/// Main entry point for Flutter Native Integration Suite
-/// 
-/// {@category Core}
-class FlutterLibsNative {
-  static const MethodChannel _channel = MethodChannel('flutter_libs_native');
+abstract class NotificationServices implements INotificationService {
+  NotificationServices({
+    FirebaseMessaging? fcm,
+    FirebaseFirestore? firestore,
+    FlutterLocalNotificationsPlugin? notificationsPlugin,
+    required FlutterBackgroundService backgroundService,
+  });
 
-  /// Initializes all core services
-  /// 
-  /// Must be called before any other library functions
-  static Future<void> initialize() async {
-    await _channel.invokeMethod('initialize');
-    await _platform.initializeErrorLogger();
-    await _platform.initializeLocationService();
-    await _platform.configureNotifications();
-    await _platform.startSessionManager();
-  }
+  /// NEW: Abstract methods
+  Future<void> setNotificationCategory(String category) async {}
+}
 
-  // Additional methods remain unchanged but would follow same documentation pattern
-  // ...
+abstract class FlutterLibsNativePlatform {
+  Future<String?> getPlatformVersion();
+  Future<void> initializeErrorLogger();
+  Future<void> initializeLocationService();
+  Future<void> configureNotifications();
+  Future<void> startSessionManager();
+
+  static FlutterLibsNativePlatform get instance => throw UnimplementedError();
+
+  Future<Map<String, String>?> initializeFirebaseWithRemoteConfig() async => {};
+
+  Future<void> initializeGeofencingService() async {}
+
+  /// NEW: Platform methods
+  Future<bool> isAppInForeground() async => true;
+  Future<void> minimizeApp() async {}
 }
