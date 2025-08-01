@@ -1,0 +1,89 @@
+name: flutter_libs_native
+description: Core Flutter native integration library providing essential mobile services including geofencing, notifications, session management, and background processing.
+version: 1.0.0-alpha.3
+homepage: https://github.com/FlutterDevsTeam/flutter_libs_native
+repository: https://github.com/FlutterDevsTeam/flutter_libs_native.git
+issue_tracker: https://github.com/FlutterDevsTeam/flutter_libs_native/issues
+documentation: https://github.com/FlutterDevsTeam/flutter_libs_native/wiki
+
+environment:
+  sdk: ">=3.8.1 <4.0.0"
+  flutter: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core dependencies
+  plugin_platform_interface: ^2.1.2
+  meta: ^1.9.1
+  
+  # Firebase services
+  firebase_core: ^4.0.0
+  cloud_firestore: ^6.0.0
+  firebase_messaging: ^16.0.0
+  
+  # Background services
+  flutter_background_service: ^5.1.0
+  workmanager: ^0.9.0
+  
+  # Notifications
+  flutter_local_notifications: ^19.3.0
+  timezone: ^0.10.1
+  
+  # Location services
+  geolocator: ^14.0.2
+  #geofencing: ^2.0.0
+  
+  # Utility packages
+  uuid: ^4.5.1
+  shared_preferences: ^2.2.2
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.2
+  build_runner: ^2.4.6
+  lint: ^2.1.1
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.flutterdevsteam.flutter_libs_native
+        pluginClass: FlutterLibsNativePlugin
+      ios:
+        pluginClass: FlutterLibsNativePlugin
+      web:
+        pluginClass: FlutterLibsNativeWeb
+        fileName: lib/flutter_libs_native_web.dart
+  
+  # Assets configuration
+  assets:
+    - assets/configs/
+    - assets/translations/
+  
+  # Fonts configuration
+  fonts:
+    - family: FlutterLibsNativeIcons
+      fonts:
+        - asset: assets/fonts/FlutterLibsNativeIcons.ttf
+
+# Linter configuration
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    unused_import: error
+    unused_local_variable: error
+
+# Build configuration
+builders:
+  json_serializable:
+    options:
+      explicit_to_json: true
+      any_map: false
