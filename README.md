@@ -9,6 +9,8 @@
 **⚠️ IMPORTANT NOTICE:**  
 This is a **private core library** developed exclusively for educational purposes as part of a university course project. It is not intended for public distribution or commercial use.
 
+In some cases you need to replace {user} with you current user name in all files. Example : {user} --> FlutterDevsTeam
+
 ## About This Project
 
 This library package was created by **FlutterDevsTeam** as a **custom internal component** for specific educational devices and applications. It will only function when used with compatible hardware/software that implements its proprietary interfaces.
